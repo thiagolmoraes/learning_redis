@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <title>Redis Queue</title>
+    <style>
+        span {
+            width: 100px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="w-full min-h-screen flex flex-col justify-center items-center space-y-20">
+
+        <div class="flex space-x-4">
+            <input type="text" id="text" class="border border-black rounded p-2 focus-font-bold">
+            <button id="save" class="border border-black rounded p-2 focus:outline-none focus:text-xs"> Push </button>
+            <button id="" class="border border-black rounded p-2 focus:outline-none focus:text-xs"> Pop </button>
+            <button id="clear" class="border border-black rounded p-2 focus:outline-none focus:text-xs"> Clear Queue </button>
+        </div>
+
+        <div id="queue" class="flex flex-col"></div>
+
+        <div id="msg"></div>
+
+    </div>
+
+</body>
+<script>
+    document.getElementById("save").addEventListener('click', async function() {
+        await fetch("/save", {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                method: "POST",
+                body: JSON.stringify({
+                    queue: document.getElementById("text").value
+                })
+            })
+            .then(res => res.text)
+            .then(data => {
+                // Update Redis
+                fetch("/redis")
+                    .then(res => res.json())
+                    .then(data => {
+                        //render html
+                        // first in - first out, draw that model
+                        // data[data.lenght - 1];
+
+
+                        document.getElementById("text").focus();
+                        document.getElementById("text").value = "";
+
+                    })
+                    .catch(erro => console.log(erro))
+
+            })
+            .catch(function(res) {
+                console.log(res)
+            })
+    });
+
+    document.getElementById("clear").addEventListener("click", async function(event) {
+        try {
+            await fetch("/clearAll", {
+                    method: "DELETE"
+                })
+                .then(res => res.text)
+                .then(data => {
+                    console.log(data);
+                    const res = fetch("/redis");
+                    const json = res.text;
+                    json.slice().reverse()
+                        .forEach(j => {
+                            temp = document.createElement('span');
+                            temp.className = "border-2 roundedc";
+                            temp.innerHTML = j;
+                            temp.id = "queue-item"
+                            document.getElementById('queue').appendChild(temp);
+                        });
+                })
+        } catch (error) {
+
+        }
+    });
+
+    const update = window.addEventListener('load', async function(event) {
+        //Get Redis
+        const res = await fetch("/redis");
+        const json = await res.json();
+        json.slice().reverse()
+            .forEach(j => {
+                temp = document.createElement('span');
+                temp.className = "border-2 roundedc";
+                temp.innerHTML = j;
+                temp.id = "queue-item"
+                document.getElementById('queue').appendChild(temp);
+            });
+    });
+</script>
+
+</html>

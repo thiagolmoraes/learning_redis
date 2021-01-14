@@ -1,0 +1,9 @@
+- Push Save 
+-- Order the list to reverse list, as stack, first in first out;
+
+- Pop
+-- Same which "push save" but instead of insert, pop item;
+
+
+- Clear
+-- Update list after Flush
